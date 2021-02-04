@@ -20,12 +20,19 @@ jobs:
           restore-keys: |
             ${{ runner.OS }}-npm-cache
       - name: Install Dependencies
-        run: npm install
-      - name: Build
-        run: npm run build
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.DEPLOY_HEXO }}
-          publish_dir: ./public
-          publish_branch: gh-pages
+        run: npm install -g yarn && yarn install
+      - name: Build🔧
+        run: yarn run clean && yarn run build
+      - name: Configuration environment🙌
+        env:
+          HEXO_DEPLOY_PRI: ${{secrets.DEPLOY_HEXO}}
+        run: |
+          mkdir -p ~/.ssh/
+          echo "$HEXO_DEPLOY_PRI" | tr -d '\r' > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          git config --global user.name "TsungKang"
+          git config --global user.email "tsungkang@live.cn"
+      - name: Deploy🚀
+        run: |
+          npm run deploy && rm -f ~/.ssh/id_rsa
